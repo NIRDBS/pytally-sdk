@@ -52,10 +52,13 @@ Get started with PyTally SDK in just a few lines of code:
 ### Basic Usage
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
 # Initialize the client with your API key
-client = Tally(api_key="tly_your_api_key_here")
+client = Tally(
+    api_key="tly_your_api_key_here",
+    api_version=SUPPORTED_TALLY_API_VERSION,
+)
 
 # Get current user information
 user = client.users.me()
@@ -70,9 +73,12 @@ if user.subscription_plan:
 The recommended approach for automatic resource cleanup:
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
-with Tally(api_key="tly_your_api_key_here") as client:
+with Tally(
+    api_key="tly_your_api_key_here",
+    api_version=SUPPORTED_TALLY_API_VERSION,
+) as client:
     # Get current user
     user = client.users.me()
     print(f"Organization ID: {user.organization_id}")
@@ -85,9 +91,12 @@ with Tally(api_key="tly_your_api_key_here") as client:
 ### Working with Forms
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
-client = Tally(api_key="tly_your_api_key_here")
+client = Tally(
+    api_key="tly_your_api_key_here",
+    api_version=SUPPORTED_TALLY_API_VERSION,
+)
 
 # List forms with pagination
 forms = client.forms.all(page=1, limit=10)
@@ -114,9 +123,12 @@ for submission in submissions.submissions:
 ### Setting up Webhooks
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
-client = Tally(api_key="tly_your_api_key_here")
+client = Tally(
+    api_key="tly_your_api_key_here",
+    api_version=SUPPORTED_TALLY_API_VERSION,
+)
 
 # Create a webhook
 webhook = client.webhooks.create(
@@ -138,15 +150,15 @@ for event in events.events:
 The Tally API uses date-based versioning. You can specify a specific API version when initializing the client:
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
 client = Tally(
     api_key="tly_your_api_key_here",
-    api_version="2026-02-05"  # Optional: specify API version
+    api_version=SUPPORTED_TALLY_API_VERSION,
 )
 ```
 
-If not specified, the client will use the version tied to your API key.
+The SDK is validated against `2025-05-30` and uses that version by default.
 
 ## Error Handling
 
@@ -175,11 +187,11 @@ For more details, see the [Error Handling](error-handling.md) guide.
 The [`TallyClient`](api-reference/users.md#initialization) accepts the following configuration options:
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
 client = Tally(
     api_key="tly_your_api_key_here",       # Required: Your Tally API key
-    api_version="2026-02-05",              # Optional: API version (default: key version)
+    api_version=SUPPORTED_TALLY_API_VERSION,  # Optional: defaults to the SDK compatibility target
     timeout=30.0,                          # Optional: Request timeout in seconds (default: 30.0)
     base_url="https://api.tally.so",       # Optional: Custom base URL (default: https://api.tally.so)
 )
@@ -199,6 +211,7 @@ PYTHONPATH=src python -m pytest tests/test_client.py tests/resources/test_forms.
 ```bash
 export TALLY_API_KEY="tly_your_api_key_here"
 export TALLY_FORM_ID="your_form_id"
+export TALLY_API_VERSION="2025-05-30"
 PYTHONPATH=src python -m pytest -m live_api tests/integration/test_forms_live.py
 ```
 

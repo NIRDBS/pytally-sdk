@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from tally import TallyClient
+from tally import SUPPORTED_TALLY_API_VERSION, TallyClient
 
 
 def _require_env(name: str) -> str:
@@ -15,7 +15,7 @@ def _require_env(name: str) -> str:
 @pytest.fixture
 def live_client() -> TallyClient:
     api_key = _require_env("TALLY_API_KEY")
-    api_version = os.getenv("TALLY_API_VERSION")
+    api_version = os.getenv("TALLY_API_VERSION", SUPPORTED_TALLY_API_VERSION)
     client = TallyClient(api_key=api_key, api_version=api_version)
     yield client
     client.close()

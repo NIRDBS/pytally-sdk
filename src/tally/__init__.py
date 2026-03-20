@@ -1,6 +1,7 @@
 """Unofficial Python SDK for the Tally.so API."""
 
 from tally.client import TallyClient
+from tally.constants import SUPPORTED_TALLY_API_VERSION
 from tally.exceptions import (
     BadRequestError,
     ForbiddenError,
@@ -25,6 +26,7 @@ __all__ = [
     "NotFoundError",
     "RateLimitError",
     "ServerError",
+    "SUPPORTED_TALLY_API_VERSION",
     "Tally",
     "TallyAPIError",
     "TallyClient",

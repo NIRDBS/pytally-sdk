@@ -4,6 +4,7 @@ from typing import Any
 
 import httpx
 
+from tally.constants import SUPPORTED_TALLY_API_VERSION
 from tally.exceptions import (
     BadRequestError,
     ForbiddenError,
@@ -28,12 +29,13 @@ class TallyClient:
 
     BASE_URL = "https://api.tally.so"
     DEFAULT_TIMEOUT = 30.0
+    DEFAULT_API_VERSION = SUPPORTED_TALLY_API_VERSION
 
     def __init__(
         self,
         api_key: str,
         *,
-        api_version: str | None = None,
+        api_version: str | None = DEFAULT_API_VERSION,
         timeout: float = DEFAULT_TIMEOUT,
         base_url: str | None = None,
     ) -> None:
@@ -41,7 +43,8 @@ class TallyClient:
 
         Args:
             api_key: Your Tally API key (Bearer token)
-            api_version: Optional API version (e.g., "2025-02-01")
+            api_version: Tally API version to send in the `tally-version` header.
+                Defaults to the SDK's validated compatibility target.
             timeout: Request timeout in seconds
             base_url: Optional custom base URL (defaults to https://api.tally.so)
         """

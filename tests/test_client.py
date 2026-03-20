@@ -9,6 +9,7 @@ from tally import (
     NotFoundError,
     RateLimitError,
     ServerError,
+    SUPPORTED_TALLY_API_VERSION,
     TallyClient,
     TallyConnectionError,
     TallyTimeoutError,
@@ -38,15 +39,24 @@ def test_client_sets_default_headers() -> None:
     assert client._get_headers() == {
         "Authorization": "Bearer tly_test_key",
         "Content-Type": "application/json",
+        "tally-version": SUPPORTED_TALLY_API_VERSION,
     }
 
     client.close()
 
 
 def test_client_includes_api_version_header() -> None:
-    client = TallyClient(api_key="tly_test_key", api_version="2026-02-05")
+    client = TallyClient(api_key="tly_test_key", api_version=SUPPORTED_TALLY_API_VERSION)
 
-    assert client._get_headers()["tally-version"] == "2026-02-05"
+    assert client._get_headers()["tally-version"] == SUPPORTED_TALLY_API_VERSION
+
+    client.close()
+
+
+def test_client_allows_disabling_version_header() -> None:
+    client = TallyClient(api_key="tly_test_key", api_version=None)
+
+    assert "tally-version" not in client._get_headers()
 
     client.close()
 

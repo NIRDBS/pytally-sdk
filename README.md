@@ -43,14 +43,19 @@ uv add pytally-sdk
 Python ≥ 3.11
 `httpx` (auto-installed)
 
+Validated against Tally API version `2025-05-30`.
+
 ---
 
 ## Quick Start
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
-client = Tally(api_key="tly_your_api_key_here")
+client = Tally(
+    api_key="tly_your_api_key_here",
+    api_version=SUPPORTED_TALLY_API_VERSION,
+)
 
 user = client.users.me()
 print(f"Hello, {user.full_name} ({user.email})")
@@ -59,9 +64,12 @@ print(f"Hello, {user.full_name} ({user.email})")
 ### With Context Manager
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
-with Tally(api_key="tly_your_api_key_here") as client:
+with Tally(
+    api_key="tly_your_api_key_here",
+    api_version=SUPPORTED_TALLY_API_VERSION,
+) as client:
     for form in client.forms:
         print(f"{form.name} ({form.id})")
 ```
@@ -73,9 +81,12 @@ with Tally(api_key="tly_your_api_key_here") as client:
 ### List Forms
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 
-client = Tally(api_key="tly_your_api_key_here")
+client = Tally(
+    api_key="tly_your_api_key_here",
+    api_version=SUPPORTED_TALLY_API_VERSION,
+)
 
 # Get first page of forms
 forms = client.forms.all(page=1, limit=10)
@@ -88,10 +99,13 @@ for form in forms.items:
 ### List Form Submissions
 
 ```python
-from tally import Tally
+from tally import SUPPORTED_TALLY_API_VERSION, Tally
 from tally.models import SubmissionFilter
 
-client = Tally(api_key="tly_your_api_key_here")
+client = Tally(
+    api_key="tly_your_api_key_here",
+    api_version=SUPPORTED_TALLY_API_VERSION,
+)
 
 result = client.forms.list_submissions(
     "your_form_id",
@@ -159,6 +173,7 @@ Live read-only tests:
 ```bash
 export TALLY_API_KEY="tly_your_api_key_here"
 export TALLY_FORM_ID="your_form_id"
+export TALLY_API_VERSION="2025-05-30"
 PYTHONPATH=src python -m pytest -m live_api tests/integration/test_forms_live.py
 ```
 

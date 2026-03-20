@@ -2,12 +2,12 @@ from collections.abc import Callable
 
 import pytest
 
-from tally import TallyClient
+from tally import SUPPORTED_TALLY_API_VERSION, TallyClient
 
 
 @pytest.fixture
 def client() -> TallyClient:
-    sdk_client = TallyClient(api_key="tly_test_key", api_version="2026-02-05")
+    sdk_client = TallyClient(api_key="tly_test_key", api_version=SUPPORTED_TALLY_API_VERSION)
     yield sdk_client
     sdk_client.close()
 
