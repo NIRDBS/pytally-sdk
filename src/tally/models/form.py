@@ -412,7 +412,6 @@ class QuestionField:
     type: BlockType | str
     block_group_uuid: str
     title: str
-    has_responses: bool
 
     @classmethod
     def from_dict(cls, data: dict) -> "QuestionField":
@@ -426,7 +425,6 @@ class QuestionField:
             else field_type,
             block_group_uuid=data["blockGroupUuid"],
             title=data["title"],
-            has_responses=data["hasResponses"],
         )
 
 

@@ -352,7 +352,6 @@ class FormsResource:
                 for field in question.fields:
                     print(f"    - {field.title} ({field.type})")
                     print(f"      UUID: {field.uuid}")
-                    print(f"      Has responses: {field.has_responses}")
             ```
         """
         data = self._client.request("GET", f"/forms/{form_id}/questions")
