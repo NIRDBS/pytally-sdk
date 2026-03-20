@@ -13,6 +13,7 @@ from tally.models.form import (
     PaginatedForms,
     PaginatedSubmissions,
     Question,
+    QuestionsList,
     SubmissionFilter,
     SubmissionWithQuestions,
 )
@@ -320,17 +321,17 @@ class FormsResource:
         """
         self._client.request("DELETE", f"/forms/{form_id}")
 
-    def list_questions(self, form_id: str) -> list[Question]:
+    def list_questions(self, form_id: str) -> QuestionsList:
         """Get all questions in a form.
 
-        Returns a list of all questions in a form, including their fields,
-        response counts, and metadata.
+        Returns the questions payload for a form, including the top-level
+        `hasResponses` flag and all question metadata.
 
         Args:
             form_id: The ID of the form
 
         Returns:
-            List of Question objects
+            QuestionsList object containing `questions` and `has_responses`
 
         Example:
             ```python
@@ -339,9 +340,10 @@ class FormsResource:
             client = Tally(api_key="tly-xxxx")
 
             # Get all questions in a form
-            questions = client.forms.list_questions("form_abc123")
+            result = client.forms.list_questions("form_abc123")
+            print(f"Has responses: {result.has_responses}")
 
-            for question in questions:
+            for question in result.questions:
                 print(f"Question: {question.title}")
                 print(f"  Type: {question.type}")
                 print(f"  ID: {question.id}")
@@ -355,7 +357,7 @@ class FormsResource:
             ```
         """
         data = self._client.request("GET", f"/forms/{form_id}/questions")
-        return [Question.from_dict(q) for q in data.get("questions", [])]
+        return QuestionsList.from_dict(data)
 
     def list_submissions(
         self,

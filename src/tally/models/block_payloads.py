@@ -1,50 +1,107 @@
-"""Payload type definitions for form blocks.
+"""Typed payload definitions for Tally form blocks.
 
-This module defines TypedDict payloads for all Tally form block types.
-All fields are optional (total=False) to support flexibility.
+These payloads are primarily request-oriented and track the current block
+reference used when creating or updating forms through the Tally API.
 
-IMPORTANT DISTINCTION:
-- Fields marked with "# Request" can be SENT when creating forms (POST)
-- Fields marked with "# Response" are ONLY returned by the API (GET)
-- Fields without markers can appear in both scenarios
+The API can still return additional payload keys on read operations, so the SDK
+keeps `BlockPayload` permissive by also allowing `dict[str, Any]` as a fallback.
 """
 
 from typing import Any, Literal, TypedDict
 
-# ! This code MUST change!! This code sucks!
-# ! This code is trash, i need to think a way to separate request from response models while
-# ! avoiding code duplication
+
+BadgeType = Literal["OFF", "NUMBERS", "LETTERS"]
+CalculatedFieldType = Literal["NUMBER", "TEXT"]
+ConditionalGroupType = Literal["SINGLE", "GROUP"]
+ConditionalActionType = Literal["SHOW_BLOCKS", "HIDE_BLOCKS", "SKIP_TO"]
+CurrencyCode = Literal["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CNY", "INR"]
+DecimalSeparator = Literal["COMMA", "DOT"]
+ThousandsSeparator = Literal["COMMA", "DOT", "SPACE", "NONE"]
+NumberFormat = Literal["NUMBER", "CURRENCY", "PERCENTAGE"]
+EmbedKind = Literal["rich", "video", "photo", "link", "pdf", "gist"]
+DisableDay = Literal[
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY",
+    "PAST",
+    "FUTURE",
+    "TODAY",
+]
 
 
 class BasePayload(TypedDict, total=False):
-    """Base payload with common fields across block types.
+    """Common payload fields shared by many Tally block types."""
 
-    These fields can be sent in requests and may appear in responses.
-    """
-
-    isHidden: bool  # Request & Response
-    columnListUuid: str  # Request & Response
-    columnUuid: str  # Request & Response
-    columnRatio: float  # Request & Response
-    name: str  # Request & Response
+    isHidden: bool
+    columnListUuid: str
+    columnUuid: str
+    columnRatio: float
+    name: str
 
 
-# Content Block Payloads
+class HtmlPayload(BasePayload, total=False):
+    """Base payload for HTML-backed content blocks."""
+
+    html: str
+
+
+class RequiredPayload(BasePayload, total=False):
+    """Base payload for required-capable question blocks."""
+
+    isRequired: bool
+
+
+class DefaultAnswerPayload(RequiredPayload, total=False):
+    """Base payload for questions that support a default answer."""
+
+    hasDefaultAnswer: bool
+    defaultAnswer: Any
+
+
+class PlaceholderPayload(DefaultAnswerPayload, total=False):
+    """Base payload for inputs with a placeholder."""
+
+    placeholder: str
+
+
+class OrderedChoicePayload(DefaultAnswerPayload, total=False):
+    """Base payload for ordered child option blocks."""
+
+    index: int
+    isFirst: bool
+    isLast: bool
+
+
+class DecoratedChoicePayload(OrderedChoicePayload, total=False):
+    """Base payload for option blocks with color, badges, and images."""
+
+    colorCodeOptions: bool
+    color: str
+    hasBadge: bool
+    badgeType: BadgeType
+    hasOtherOption: bool
+    isOtherOption: bool
+    image: str
 
 
 class MentionField(TypedDict, total=False):
-    """Field reference in a mention (Request)."""
+    """Field reference used inside a mention."""
 
     uuid: str
-    type: Literal["InputField", "CalculatedField", "HiddenField"]
+    type: Literal["INPUT_FIELD", "CALCULATED_FIELD", "HIDDEN_FIELD"]
     questionType: str
     blockGroupUuid: str
     title: str
-    calculatedFieldType: Literal["NUMBER", "TEXT"]
+    calculatedFieldType: CalculatedFieldType
+    payload: dict[str, Any]
 
 
 class Mention(TypedDict, total=False):
-    """Mention object for FormTitlePayload (Request)."""
+    """Mention object used by form title blocks."""
 
     uuid: str
     field: MentionField
@@ -52,368 +109,188 @@ class Mention(TypedDict, total=False):
 
 
 class CoverSettings(TypedDict, total=False):
-    """Cover settings for FormTitlePayload (Request)."""
+    """Cover display settings for a form title block."""
 
     objectPositionYPercent: float
 
 
 class ButtonSettings(TypedDict, total=False):
-    """Button settings for various payloads (Request & Response)."""
+    """Button settings used by supported blocks."""
 
     label: str
 
 
-class FormTitlePayload(BasePayload):
-    """Payload for FORM_TITLE block type."""
+class FormTitlePayload(HtmlPayload, total=False):
+    """Payload for FORM_TITLE blocks."""
 
-    # Request fields (can be sent in POST)
-    html: str  # Request
-    logo: str  # Request (URI)
-    cover: str  # Request (URI)
-    coverSettings: CoverSettings  # Request
-    mentions: list[Mention]  # Request
-    button: ButtonSettings  # Request
-
-    # Response-only fields (returned by GET, cannot be sent)
-    safeHTMLSchema: list[Any]  # Response only
-    title: str  # Response only
+    title: str
+    logo: str
+    cover: str
+    coverSettings: CoverSettings
+    mentions: list[Mention]
+    button: ButtonSettings
 
 
-class TextPayload(BasePayload):
-    """Payload for TEXT block type."""
-
-    # Request fields
-    html: str  # Request
-
-    # Response-only fields
-    safeHTMLSchema: list[Any]  # Response only
-    isFolded: bool  # Response only
+class TextPayload(HtmlPayload, total=False):
+    """Payload for TEXT blocks."""
 
 
-class LabelPayload(BasePayload):
-    """Payload for LABEL block type."""
+class LabelPayload(HtmlPayload, total=False):
+    """Payload for LABEL blocks."""
 
-    # Request fields
-    html: str  # Request
-    isFolded: bool  # Request
-
-    # Response-only fields
-    safeHTMLSchema: list[Any]  # Response only
+    isFolded: bool
 
 
-class TitlePayload(BasePayload):
-    """Payload for TITLE block type."""
+class TitlePayload(HtmlPayload, total=False):
+    """Payload for TITLE blocks."""
 
-    # Request fields
-    html: str  # Request
-    isFolded: bool  # Request
-
-    # Response-only fields
-    safeHTMLSchema: list[Any]  # Response only
+    isFolded: bool
 
 
-class Heading1Payload(BasePayload):
-    """Payload for HEADING_1 block type."""
-
-    # Request fields
-    html: str  # Request
-
-    # Response-only fields
-    safeHTMLSchema: list[Any]  # Response only
+class Heading1Payload(HtmlPayload, total=False):
+    """Payload for HEADING_1 blocks."""
 
 
-class Heading2Payload(BasePayload):
-    """Payload for HEADING_2 block type."""
-
-    # Request fields
-    html: str  # Request
-
-    # Response-only fields
-    safeHTMLSchema: list[Any]  # Response only
+class Heading2Payload(HtmlPayload, total=False):
+    """Payload for HEADING_2 blocks."""
 
 
-class Heading3Payload(BasePayload):
-    """Payload for HEADING_3 block type."""
-
-    # Request fields
-    html: str  # Request
-
-    # Response-only fields
-    safeHTMLSchema: list[Any]  # Response only
+class Heading3Payload(HtmlPayload, total=False):
+    """Payload for HEADING_3 blocks."""
 
 
-class DividerPayload(BasePayload):
-    """Payload for DIVIDER block type.
-
-    Only uses base fields (isHidden, columnListUuid, etc).
-    """
-
-    pass
+class DividerPayload(BasePayload, total=False):
+    """Payload for DIVIDER blocks."""
 
 
-class PageBreakPayload(BasePayload):
-    """Payload for PAGE_BREAK block type."""
+class PageBreakPayload(BasePayload, total=False):
+    """Payload for PAGE_BREAK blocks."""
 
-    # Request fields
-    index: int  # Request
-    isFirst: bool  # Request
-    isLast: bool  # Request
-    isQualifiedForThankYouPage: bool  # Request
-    isThankYouPage: bool  # Request
-
-    # Response-only fields
-    button: ButtonSettings  # Response only
-    html: str  # Response only (legacy)
+    index: int
+    isFirst: bool
+    isLast: bool
+    isQualifiedForThankYouPage: bool
+    isThankYouPage: bool
+    button: ButtonSettings
 
 
-class ThankYouPagePayload(BasePayload):
-    """Payload for THANK_YOU_PAGE block type."""
+class ThankYouPagePayload(HtmlPayload, total=False):
+    """Payload for THANK_YOU_PAGE blocks."""
 
-    # Request fields
-    isThankYouPage: bool  # Request
-
-    # Response-only fields
-    html: str  # Response only
-    safeHTMLSchema: list[Any]  # Response only
+    isThankYouPage: bool
 
 
 class ImageSettings(TypedDict, total=False):
-    """Image settings (Request)."""
+    """Single image descriptor for IMAGE blocks."""
 
     name: str
     url: str
 
 
-class ImagePayload(BasePayload):
-    """Payload for IMAGE block type."""
+class ImagePayload(BasePayload, total=False):
+    """Payload for IMAGE blocks."""
 
-    # Request fields
-    images: list[ImageSettings]  # Request
-    caption: str  # Request
-    link: str  # Request (URI)
-    altText: str  # Request
-
-    # Response-only fields (legacy)
-    url: str  # Response only (legacy)
-    alt: str  # Response only (legacy)
-    width: float  # Response only (legacy)
-    height: float  # Response only (legacy)
+    images: list[ImageSettings]
+    caption: str
+    link: str
+    altText: str
 
 
 class EmbedDisplay(TypedDict, total=False):
-    """Embed display settings (Request)."""
+    """Display settings for EMBED blocks."""
 
     url: str
 
 
-class EmbedPayload(BasePayload):
-    """Payload for EMBED block type."""
+class EmbedPayload(BasePayload, total=False):
+    """Payload for EMBED blocks."""
 
-    # Request fields
-    type: Literal["rich", "video", "photo", "link", "pdf", "gist"]  # Request
-    provider: str  # Request
-    title: str  # Request
-    inputUrl: str  # Request (URI)
-    display: EmbedDisplay  # Request
-    width: str | int  # Request
-    height: str | int  # Request
-
-    # Response-only fields (legacy)
-    html: str  # Response only (legacy)
-    url: str  # Response only (legacy)
+    type: EmbedKind
+    provider: str
+    title: str
+    inputUrl: str
+    display: EmbedDisplay
+    width: str | int
+    height: str | int
 
 
-class EmbedVideoPayload(BasePayload):
-    """Payload for EMBED_VIDEO block type."""
+class EmbedVideoPayload(BasePayload, total=False):
+    """Payload for EMBED_VIDEO blocks."""
 
-    # Request fields
-    url: str  # Request (URI)
-    provider: str  # Request
-
-
-class EmbedAudioPayload(BasePayload):
-    """Payload for EMBED_AUDIO block type."""
-
-    # Request fields
-    url: str  # Request (URI)
-    provider: str  # Request
+    url: str
+    provider: str
 
 
-# Question Block Payloads
+class EmbedAudioPayload(BasePayload, total=False):
+    """Payload for EMBED_AUDIO blocks."""
+
+    url: str
+    provider: str
 
 
-class QuestionPayload(BasePayload):
-    """Payload for QUESTION block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-
-    # Response-only fields (legacy)
-    html: str  # Response only (legacy)
-    required: bool  # Response only (legacy)
-    description: str  # Response only (legacy)
-    hasDefaultAnswer: bool  # Response only (legacy)
-    defaultAnswer: Any  # Response only (legacy)
+class QuestionPayload(RequiredPayload, total=False):
+    """Payload for QUESTION blocks."""
 
 
-class MatrixPayload(BasePayload):
-    """Payload for MATRIX block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-
-    # Response-only fields (legacy)
-    html: str  # Response only (legacy)
-    required: bool  # Response only (legacy)
+class MatrixPayload(DefaultAnswerPayload, total=False):
+    """Payload for MATRIX blocks."""
 
 
-class InputTextPayload(BasePayload):
-    """Payload for INPUT_TEXT block type."""
+class InputTextPayload(PlaceholderPayload, total=False):
+    """Payload for INPUT_TEXT blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    placeholder: str  # Request
-    hasMinCharacters: bool  # Request
-    minCharacters: int  # Request
-    hasMaxCharacters: bool  # Request
-    maxCharacters: int  # Request
-
-    # Response-only fields (legacy)
-    minLength: int  # Response only (legacy)
-    maxLength: int  # Response only (legacy)
-    defaultValue: str  # Response only (legacy)
+    hasMinCharacters: bool
+    minCharacters: int
+    hasMaxCharacters: bool
+    maxCharacters: int
 
 
-class InputNumberPayload(BasePayload):
-    """Payload for INPUT_NUMBER block type."""
+class InputNumberPayload(PlaceholderPayload, total=False):
+    """Payload for INPUT_NUMBER blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    placeholder: str  # Request
-    hasMinValue: bool  # Request
-    minValue: float  # Request
-    hasMaxValue: bool  # Request
-    maxValue: float  # Request
-    decimalSeparator: Literal["COMMA", "DOT"]  # Request
-    thousandsSeparator: Literal["COMMA", "DOT", "SPACE", "NONE"]  # Request
-    numberFormat: Literal["NUMBER", "CURRENCY", "PERCENTAGE"]  # Request
-    currency: Literal["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CNY", "INR"]  # Request
-
-    # Response-only fields (legacy)
-    min: float  # Response only (legacy)
-    max: float  # Response only (legacy)
-    defaultValue: float  # Response only (legacy)
+    hasMinValue: bool
+    minValue: float
+    hasMaxValue: bool
+    maxValue: float
+    decimalSeparator: DecimalSeparator
+    thousandsSeparator: ThousandsSeparator
+    numberFormat: NumberFormat
+    currency: CurrencyCode
 
 
-class InputEmailPayload(BasePayload):
-    """Payload for INPUT_EMAIL block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    placeholder: str  # Request
-
-    # Response-only fields (legacy)
-    defaultValue: str  # Response only (legacy)
+class InputEmailPayload(PlaceholderPayload, total=False):
+    """Payload for INPUT_EMAIL blocks."""
 
 
-class InputLinkPayload(BasePayload):
-    """Payload for INPUT_LINK block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    placeholder: str  # Request
-
-    # Response-only fields (legacy)
-    defaultValue: str  # Response only (legacy)
+class InputLinkPayload(PlaceholderPayload, total=False):
+    """Payload for INPUT_LINK blocks."""
 
 
-class InputPhoneNumberPayload(BasePayload):
-    """Payload for INPUT_PHONE_NUMBER block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    placeholder: str  # Request
-
-    # Response-only fields (legacy)
-    defaultValue: str  # Response only (legacy)
+class InputPhoneNumberPayload(PlaceholderPayload, total=False):
+    """Payload for INPUT_PHONE_NUMBER blocks."""
 
 
-class InputDatePayload(BasePayload):
-    """Payload for INPUT_DATE block type."""
+class InputDatePayload(PlaceholderPayload, total=False):
+    """Payload for INPUT_DATE blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    placeholder: str  # Request
-    disableDays: list[
-        Literal[
-            "MONDAY",
-            "TUESDAY",
-            "WEDNESDAY",
-            "THURSDAY",
-            "FRIDAY",
-            "SATURDAY",
-            "SUNDAY",
-            "PAST",
-            "FUTURE",
-            "TODAY",
-        ]
-    ]  # Request
-
-    # Response-only fields (legacy)
-    format: str  # Response only (legacy)
-    defaultValue: str  # Response only (legacy)
+    disableDays: list[DisableDay]
 
 
-class InputTimePayload(BasePayload):
-    """Payload for INPUT_TIME block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    placeholder: str  # Request
-
-    # Response-only fields (legacy)
-    format: str  # Response only (legacy)
-    defaultValue: str  # Response only (legacy)
+class InputTimePayload(PlaceholderPayload, total=False):
+    """Payload for INPUT_TIME blocks."""
 
 
-class TextareaPayload(BasePayload):
-    """Payload for TEXTAREA block type."""
+class TextareaPayload(PlaceholderPayload, total=False):
+    """Payload for TEXTAREA blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    placeholder: str  # Request
-    hasMinCharacters: bool  # Request
-    minCharacters: int  # Request
-    hasMaxCharacters: bool  # Request
-    maxCharacters: int  # Request
-
-    # Response-only fields (legacy)
-    minLength: int  # Response only (legacy)
-    maxLength: int  # Response only (legacy)
-    rows: int  # Response only (legacy)
-    defaultValue: str  # Response only (legacy)
+    hasMinCharacters: bool
+    minCharacters: int
+    hasMaxCharacters: bool
+    maxCharacters: int
 
 
 class AllowedFiles(TypedDict, total=False):
-    """Allowed file types for FILE_UPLOAD (Request)."""
+    """Allowed file categories for FILE_UPLOAD blocks."""
 
     images: bool
     documents: bool
@@ -422,315 +299,157 @@ class AllowedFiles(TypedDict, total=False):
     other: bool
 
 
-class FileUploadPayload(BasePayload):
-    """Payload for FILE_UPLOAD block type."""
+class FileUploadPayload(RequiredPayload, total=False):
+    """Payload for FILE_UPLOAD blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    allowedFiles: AllowedFiles  # Request
-    hasMaxFileSize: bool  # Request
-    maxFileSize: int  # Request
-    hasMaxFiles: bool  # Request
-    maxFiles: int  # Request
-
-    # Response-only fields (legacy)
-    accept: str  # Response only (legacy)
-    maxSize: int  # Response only (legacy)
-    multiple: bool  # Response only (legacy)
+    allowedFiles: AllowedFiles
+    hasMaxFileSize: bool
+    maxFileSize: int
+    hasMaxFiles: bool
+    maxFiles: int
 
 
-class LinearScalePayload(BasePayload):
-    """Payload for LINEAR_SCALE block type."""
+class LinearScalePayload(DefaultAnswerPayload, total=False):
+    """Payload for LINEAR_SCALE blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    minValue: int  # Request
-    maxValue: int  # Request
-    minLabel: str  # Request
-    maxLabel: str  # Request
-
-    # Response-only fields (legacy)
-    min: int  # Response only (legacy)
-    max: int  # Response only (legacy)
+    minValue: int
+    maxValue: int
+    minLabel: str
+    maxLabel: str
 
 
-class RatingPayload(BasePayload):
-    """Payload for RATING block type."""
+class RatingPayload(DefaultAnswerPayload, total=False):
+    """Payload for RATING blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    maxValue: int  # Request
-
-    # Response-only fields (legacy)
-    max: int  # Response only (legacy)
-    icon: str  # Response only (legacy)
+    maxValue: int
 
 
-class HiddenField(TypedDict):
-    """Hidden field definition (Request)."""
+class HiddenField(TypedDict, total=False):
+    """Single hidden field definition."""
 
     uuid: str
     name: str
 
 
-class HiddenFieldsPayload(BasePayload):
-    """Payload for HIDDEN_FIELDS block type."""
+class HiddenFieldsPayload(BasePayload, total=False):
+    """Payload for HIDDEN_FIELDS blocks."""
 
-    # Request fields
-    fields: list[HiddenField]  # Request
-
-    # Response-only fields (legacy - may appear as dict)
-    # fields can also be dict[str, str] in responses
+    hiddenFields: list[HiddenField]
 
 
-# Selection Block Payloads
+class MultipleChoiceOptionPayload(DecoratedChoicePayload, total=False):
+    """Payload for MULTIPLE_CHOICE_OPTION blocks."""
 
 
-class MultipleChoiceOptionPayload(BasePayload):
-    """Payload for MULTIPLE_CHOICE_OPTION block type."""
+class CheckboxPayload(RequiredPayload, total=False):
+    """Payload for CHECKBOX blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    index: int  # Request
-    isFirst: bool  # Request
-    isLast: bool  # Request
-    colorCodeOptions: bool  # Request
-    color: str  # Request
-    hasBadge: bool  # Request
-    badgeType: Literal["OFF", "NUMBERS", "LETTERS"]  # Request
-    hasOtherOption: bool  # Request
-    isOtherOption: bool  # Request
-    image: str  # Request
-
-    # Response-only fields
-    text: str  # Response only
-    label: str  # Response only
+    label: str
+    defaultChecked: bool
 
 
-class CheckboxPayload(BasePayload):
-    """Payload for CHECKBOX block type."""
-
-    # Request fields
-    label: str  # Request
-    isRequired: bool  # Request
-    defaultChecked: bool  # Request
-
-    # Response-only fields
-    index: int  # Response only
-    isFirst: bool  # Response only
-    isLast: bool  # Response only
-    hasMaxChoices: bool  # Response only
-    maxChoices: int  # Response only
-    hasMinChoices: bool  # Response only
-    minChoices: int  # Response only
-    text: str  # Response only
+class DropdownOptionPayload(OrderedChoicePayload, total=False):
+    """Payload for DROPDOWN_OPTION blocks."""
 
 
-class DropdownOptionPayload(BasePayload):
-    """Payload for DROPDOWN_OPTION block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    index: int  # Request
-    isFirst: bool  # Request
-    isLast: bool  # Request
-
-    # Response-only fields
-    text: str  # Response only
-    label: str  # Response only
+class RankingOptionPayload(OrderedChoicePayload, total=False):
+    """Payload for RANKING_OPTION blocks."""
 
 
-class RankingOptionPayload(BasePayload):
-    """Payload for RANKING_OPTION block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    index: int  # Request
-    isFirst: bool  # Request
-    isLast: bool  # Request
-
-    # Response-only fields
-    text: str  # Response only
-    colorCodeOptions: bool  # Response only
-    color: str  # Response only
-    hasBadge: bool  # Response only
-    badgeType: Literal["OFF", "NUMBERS", "LETTERS"]  # Response only
-    hasOtherOption: bool  # Response only
-    isOtherOption: bool  # Response only
-    image: str  # Response only
+class MultiSelectOptionPayload(DecoratedChoicePayload, total=False):
+    """Payload for MULTI_SELECT_OPTION blocks."""
 
 
-class MultiSelectOptionPayload(BasePayload):
-    """Payload for MULTI_SELECT_OPTION block type."""
+class PaymentPayload(RequiredPayload, total=False):
+    """Payload for PAYMENT blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    hasDefaultAnswer: bool  # Request
-    defaultAnswer: Any  # Request
-    index: int  # Request
-    isFirst: bool  # Request
-    isLast: bool  # Request
-    colorCodeOptions: bool  # Request
-    color: str  # Request
-    hasBadge: bool  # Request
-    badgeType: Literal["OFF", "NUMBERS", "LETTERS"]  # Request
-    hasOtherOption: bool  # Request
-    isOtherOption: bool  # Request
-    image: str  # Request
-
-    # Response-only fields
-    text: str  # Response only
-    label: str  # Response only
+    amount: float
+    currency: CurrencyCode
 
 
-# Special Block Payloads
+class SignaturePayload(RequiredPayload, total=False):
+    """Payload for SIGNATURE blocks."""
 
 
-class PaymentPayload(BasePayload):
-    """Payload for PAYMENT block type."""
+class MatrixRowPayload(RequiredPayload, total=False):
+    """Payload for MATRIX_ROW blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-    amount: float  # Request
-    currency: Literal["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CNY", "INR"]  # Request
-
-    # Response-only fields (legacy)
-    description: str  # Response only (legacy)
+    index: int
+    isFirst: bool
+    isLast: bool
 
 
-class SignaturePayload(BasePayload):
-    """Payload for SIGNATURE block type."""
+class MatrixColumnPayload(RequiredPayload, total=False):
+    """Payload for MATRIX_COLUMN blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-
-
-class MatrixRowPayload(BasePayload):
-    """Payload for MATRIX_ROW block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    index: int  # Request
-    isFirst: bool  # Request
-    isLast: bool  # Request
-
-    # Response-only fields (legacy)
-    label: str  # Response only (legacy)
+    index: int
+    isFirst: bool
+    isLast: bool
 
 
-class MatrixColumnPayload(BasePayload):
-    """Payload for MATRIX_COLUMN block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-    index: int  # Request
-    isFirst: bool  # Request
-    isLast: bool  # Request
-
-    # Response-only fields (legacy)
-    label: str  # Response only (legacy)
-
-
-class WalletConnectPayload(BasePayload):
-    """Payload for WALLET_CONNECT block type."""
-
-    # Request fields
-    isRequired: bool  # Request
-
-    # Response-only fields (legacy)
-    chains: list[str]  # Response only (legacy)
+class WalletConnectPayload(RequiredPayload, total=False):
+    """Payload for WALLET_CONNECT blocks."""
 
 
 class Conditional(TypedDict, total=False):
-    """Conditional object for conditional logic (Request)."""
+    """Single conditional node in a CONDITIONAL_LOGIC block."""
 
     uuid: str
-    type: Literal["SINGLE", "GROUP"]
+    type: ConditionalGroupType
     payload: dict[str, Any]
 
 
 class ConditionalAction(TypedDict, total=False):
-    """Action object for conditional logic (Request)."""
+    """Single conditional action in a CONDITIONAL_LOGIC block."""
 
     uuid: str
-    type: Literal["SHOW_BLOCKS", "HIDE_BLOCKS", "SKIP_TO"]
+    type: ConditionalActionType
     payload: dict[str, Any]
 
 
-class ConditionalLogicPayload(BasePayload):
-    """Payload for CONDITIONAL_LOGIC block type."""
+class ConditionalLogicPayload(BasePayload, total=False):
+    """Payload for CONDITIONAL_LOGIC blocks."""
 
-    # Request fields
-    conditionals: list[Conditional]  # Request
-    actions: list[ConditionalAction]  # Request
-
-    # Response-only fields
-    updateUuid: str  # Response only
-    logicalOperator: Literal["AND", "OR"]  # Response only
+    conditionals: list[Conditional]
+    actions: list[ConditionalAction]
+    updateUuid: str
+    logicalOperator: Literal["AND", "OR"]
 
 
-class CalculatedField(TypedDict):
-    """Calculated field definition (Request)."""
+class CalculatedField(TypedDict, total=False):
+    """Single calculated field definition."""
 
     uuid: str
     name: str
-    type: Literal["NUMBER", "TEXT"]
+    type: CalculatedFieldType
     value: Any
 
 
-class CalculatedFieldsPayload(BasePayload):
-    """Payload for CALCULATED_FIELDS block type."""
+class CalculatedFieldsPayload(BasePayload, total=False):
+    """Payload for CALCULATED_FIELDS blocks."""
 
-    # Request fields
-    fields: list[CalculatedField]  # Request
-
-    # Response-only fields (legacy)
-    formula: str  # Response only (legacy)
+    fields: list[CalculatedField]
+    formula: str
 
 
-class CaptchaPayload(BasePayload):
-    """Payload for CAPTCHA block type."""
+class CaptchaPayload(RequiredPayload, total=False):
+    """Payload for CAPTCHA blocks."""
 
-    # Request fields
-    isRequired: bool  # Request
-
-    # Response-only fields (legacy)
-    provider: str  # Response only (legacy)
+    provider: str
 
 
-class RespondentCountryPayload(BasePayload):
-    """Payload for RESPONDENT_COUNTRY block type."""
-
-    # Request fields
-    isRequired: bool  # Request
+class RespondentCountryPayload(RequiredPayload, total=False):
+    """Payload for RESPONDENT_COUNTRY blocks."""
 
 
-# Legacy/General Option Payload
-
-
-class OptionPayload(BasePayload):
-    """Generic payload for option-based block types.
-
-    This is kept for backwards compatibility.
-    Use specific payloads (MultipleChoiceOptionPayload, etc) for type safety.
-    """
+class OptionPayload(BasePayload, total=False):
+    """Generic option payload kept as a compatibility escape hatch."""
 
     label: str
     value: str
     text: str
 
 
-# Union type for all possible payloads
 BlockPayload = (
     FormTitlePayload
     | TextPayload
@@ -775,8 +494,9 @@ BlockPayload = (
     | CalculatedFieldsPayload
     | CaptchaPayload
     | RespondentCountryPayload
-    | dict[str, Any]  # Fallback for flexibility
+    | dict[str, Any]
 )
+
 
 __all__ = [
     "AllowedFiles",

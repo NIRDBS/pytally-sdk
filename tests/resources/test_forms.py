@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 from tally import TallyClient
-from tally.models import BlockType, FormBlock, FormSettings, FormStatus, SubmissionFilter
+from tally.models import BlockType, FormBlock, FormSettings, FormStatus, SubmissionFilter, SubmissionResponse
 
 
 def test_all_builds_params_and_parses_paginated_forms(
@@ -21,6 +21,7 @@ def test_all_builds_params_and_parses_paginated_forms(
     assert result.has_more is True
     assert [form.id for form in result.items] == ["form_123", "form_456"]
     assert result.items[0].status is FormStatus.PUBLISHED
+    assert result.items[0].organization_id == "org_123"
 
 
 def test_get_returns_form_details(client: TallyClient, form_details_payload: dict) -> None:
@@ -30,6 +31,10 @@ def test_get_returns_form_details(client: TallyClient, form_details_payload: dic
 
     client.request.assert_called_once_with("GET", "/forms/form_123")
     assert result.id == "form_123"
+    assert result.organization_id == "org_123"
+    assert result.is_name_modified_by_user is True
+    assert result.has_draft_blocks is False
+    assert result.index == 7
     assert result.settings.has_progress_bar is True
     assert result.blocks[0].type is BlockType.FORM_TITLE
     assert result.payments[0].currency == "USD"
@@ -126,15 +131,17 @@ def test_delete_calls_delete_endpoint(client: TallyClient) -> None:
     client.request.assert_called_once_with("DELETE", "/forms/form_123")
 
 
-def test_list_questions_parses_question_models(client: TallyClient, submissions_payload: dict) -> None:
-    client.request = MagicMock(return_value={"questions": submissions_payload["questions"]})
+def test_list_questions_parses_question_models(client: TallyClient, questions_payload: dict) -> None:
+    client.request = MagicMock(return_value=questions_payload)
 
     result = client.forms.list_questions("form_123")
 
     client.request.assert_called_once_with("GET", "/forms/form_123/questions")
-    assert len(result) == 1
-    assert result[0].fields[0].type is BlockType.INPUT_TEXT
-    assert result[0].number_of_responses == 2
+    assert result.has_responses is True
+    assert len(result.questions) == 1
+    assert result.questions[0].fields[0].type is BlockType.INPUT_FIELD
+    assert result.questions[0].fields[0].question_type is BlockType.INPUT_TEXT
+    assert result.questions[0].number_of_responses == 2
 
 
 def test_list_submissions_builds_filters_and_parses_payload(
@@ -164,6 +171,10 @@ def test_list_submissions_builds_filters_and_parses_payload(
         },
     )
     assert result.total_number_of_submissions_per_filter.completed == 1
+    assert result.submissions[0].respondent_id == "respondent_1"
+    assert result.submissions[0].responses[0].form_id == "form_123"
+    assert result.submissions[0].responses[0].submission_id == "submission_1"
+    assert result.submissions[0].responses[0].formatted_answer == "Ada"
     assert result.submissions[0].responses[0].value == "Ada"
 
 
@@ -180,6 +191,9 @@ def test_get_submission_parses_submission_with_questions(
         "/forms/form_123/submissions/submission_1",
     )
     assert result.submission.id == "submission_1"
+    assert result.submission.respondent_id == "respondent_1"
+    assert result.submission.responses[0].session_uuid == "session_1"
+    assert result.submission.responses[0].formatted_answer == "Ada"
     assert result.questions[0].id == "question_1"
 
 
@@ -192,3 +206,29 @@ def test_delete_submission_calls_delete_endpoint(client: TallyClient) -> None:
         "DELETE",
         "/forms/form_123/submissions/submission_1",
     )
+
+
+def test_submission_response_from_dict_reads_answer_field() -> None:
+    response = SubmissionResponse.from_dict(
+        {
+            "id": "response_1",
+            "formId": "form_123",
+            "questionId": "question_1",
+            "respondentId": "respondent_1",
+            "submissionId": "submission_1",
+            "sessionUuid": "session_1",
+            "answer": ["Ada"],
+            "formattedAnswer": "Ada",
+            "createdAt": "2026-03-03T10:00:00Z",
+            "updatedAt": "2026-03-03T10:01:00Z",
+        }
+    )
+
+    assert response.id == "response_1"
+    assert response.form_id == "form_123"
+    assert response.question_id == "question_1"
+    assert response.respondent_id == "respondent_1"
+    assert response.submission_id == "submission_1"
+    assert response.session_uuid == "session_1"
+    assert response.formatted_answer == "Ada"
+    assert response.value == ["Ada"]

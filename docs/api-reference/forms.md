@@ -165,15 +165,16 @@ client.forms.delete(form_id: str) -> None
 ### Method
 
 ```python
-client.forms.list_questions(form_id: str) -> list[Question]
+client.forms.list_questions(form_id: str) -> QuestionsList
 ```
 
 ### Example
 
 ```python
-questions = client.forms.list_questions("wXYz123")
+result = client.forms.list_questions("wXYz123")
 
-for question in questions:
+print(result.has_responses)
+for question in result.questions:
     print(question.id, question.title, question.type)
     for field in question.fields:
         print(field.uuid, field.title, field.type)
@@ -181,8 +182,8 @@ for question in questions:
 
 ### Notes
 
-- `QuestionField` currently exposes `uuid`, `type`, `block_group_uuid`, and `title`
-- Tally's current API no longer includes `hasResponses` in this payload version
+- `QuestionsList` exposes `questions` and `has_responses`
+- `QuestionField` exposes `uuid`, `type`, `question_type`, `block_group_uuid`, and `title`
 
 ### Official Reference
 
@@ -314,6 +315,14 @@ client.forms.delete_submission(
 ### Question
 
 ::: tally.models.form.Question
+    options:
+      show_source: false
+      heading_level: 4
+      members: []
+
+### QuestionsList
+
+::: tally.models.form.QuestionsList
     options:
       show_source: false
       heading_level: 4

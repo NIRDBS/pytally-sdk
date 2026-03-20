@@ -18,10 +18,14 @@ def form_payload_factory() -> Callable[..., dict]:
         payload = {
             "id": "form_123",
             "name": "Customer Feedback",
+            "isNameModifiedByUser": True,
             "workspaceId": "ws_123",
+            "organizationId": "org_123",
             "status": "PUBLISHED",
+            "hasDraftBlocks": False,
             "numberOfSubmissions": 2,
             "isClosed": False,
+            "index": 7,
             "createdAt": "2026-03-01T10:00:00Z",
             "updatedAt": "2026-03-02T11:00:00Z",
         }
@@ -97,7 +101,8 @@ def submissions_payload() -> dict:
                 "fields": [
                     {
                         "uuid": "field-1",
-                        "type": "INPUT_TEXT",
+                        "type": "INPUT_FIELD",
+                        "questionType": "INPUT_TEXT",
                         "blockGroupUuid": "group-1",
                         "title": "First name",
                     }
@@ -108,16 +113,35 @@ def submissions_payload() -> dict:
             {
                 "id": "submission_1",
                 "formId": "form_123",
+                "respondentId": "respondent_1",
                 "isCompleted": True,
                 "submittedAt": "2026-03-03T10:00:00Z",
+                "createdAt": "2026-03-03T09:59:00Z",
+                "updatedAt": "2026-03-03T10:01:00Z",
                 "responses": [
                     {
+                        "id": "response_1",
+                        "formId": "form_123",
                         "questionId": "question_1",
-                        "value": "Ada",
+                        "respondentId": "respondent_1",
+                        "submissionId": "submission_1",
+                        "sessionUuid": "session_1",
+                        "answer": "Ada",
+                        "formattedAnswer": "Ada",
+                        "createdAt": "2026-03-03T10:00:00Z",
+                        "updatedAt": "2026-03-03T10:01:00Z",
                     }
                 ],
             }
         ],
+    }
+
+
+@pytest.fixture
+def questions_payload(submissions_payload: dict) -> dict:
+    return {
+        "questions": submissions_payload["questions"],
+        "hasResponses": True,
     }
 
 
@@ -128,6 +152,7 @@ def submission_with_questions_payload(submissions_payload: dict) -> dict:
         "submission": {
             "id": "submission_1",
             "formId": "form_123",
+            "respondentId": "respondent_1",
             "isCompleted": True,
             "submittedAt": "2026-03-03T10:00:00Z",
             "createdAt": "2026-03-03T09:59:00Z",

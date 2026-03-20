@@ -38,3 +38,23 @@ def test_live_list_submissions_returns_submission_page(
     for submission in result.submissions:
         assert submission.form_id == live_form_id
         assert submission.id
+
+    if result.submissions:
+        assert any(
+            response.value is not None
+            for submission in result.submissions
+            for response in submission.responses
+        )
+
+
+@pytest.mark.live_api
+def test_live_list_questions_returns_questions_payload(
+    live_client: TallyClient,
+    live_form_id: str,
+) -> None:
+    result = live_client.forms.list_questions(live_form_id)
+
+    assert isinstance(result.has_responses, bool)
+    assert len(result.questions) > 0
+    for question in result.questions:
+        assert question.form_id == live_form_id

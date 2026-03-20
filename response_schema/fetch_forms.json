@@ -1,0 +1,82 @@
+{
+  "id": "<string>",
+  "name": "<string>",
+  "workspaceId": "<string>",
+  "status": "BLANK",
+  "numberOfSubmissions": 123,
+  "isClosed": true,
+  "createdAt": "2023-11-07T05:31:56Z",
+  "updatedAt": "2023-11-07T05:31:56Z",
+  "payments": [
+    {
+      "amount": 123,
+      "currency": "<string>"
+    }
+  ],
+  "settings": {
+    "language": "<string>",
+    "isClosed": false,
+    "closeMessageTitle": "<string>",
+    "closeMessageDescription": "<string>",
+    "closeTimezone": "<string>",
+    "closeDate": "<string>",
+    "closeTime": "<string>",
+    "submissionsLimit": 1,
+    "uniqueSubmissionKey": "<string>",
+    "redirectOnCompletion": "<string>",
+    "hasSelfEmailNotifications": false,
+    "selfEmailTo": "<string>",
+    "selfEmailReplyTo": "<string>",
+    "selfEmailSubject": "<string>",
+    "selfEmailFromName": "<string>",
+    "selfEmailBody": "<string>",
+    "hasRespondentEmailNotifications": false,
+    "respondentEmailTo": "<string>",
+    "respondentEmailReplyTo": "<string>",
+    "respondentEmailSubject": "<string>",
+    "respondentEmailFromName": "<string>",
+    "respondentEmailBody": "<string>",
+    "hasProgressBar": false,
+    "hasPartialSubmissions": false,
+    "pageAutoJump": false,
+    "saveForLater": true,
+    "styles": "<string>",
+    "password": "<string>",
+    "submissionsDataRetentionDuration": 1,
+    "submissionsDataRetentionUnit": "<string>"
+  },
+  "blocks": [
+    {
+      "uuid": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+      "type": "FORM_TITLE",
+      "groupUuid": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+      "groupType": "FORM_TITLE",
+      "payload": {
+        "html": "<string>",
+        "logo": "<string>",
+        "cover": "<string>",
+        "coverSettings": {
+          "objectPositionYPercent": 50
+        },
+        "mentions": [
+          {
+            "uuid": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+            "field": {
+              "uuid": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+              "type": "INPUT_FIELD",
+              "questionType": "INPUT_TEXT",
+              "blockGroupUuid": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+              "title": "<string>",
+              "calculatedFieldType": "NUMBER",
+              "payload": {}
+            },
+            "defaultValue": "<unknown>"
+          }
+        ],
+        "button": {
+          "label": "<string>"
+        }
+      }
+    }
+  ]
+}

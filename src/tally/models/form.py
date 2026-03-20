@@ -47,17 +47,22 @@ class BlockType(str, Enum):
     INPUT_TEXT = "INPUT_TEXT"
     INPUT_NUMBER = "INPUT_NUMBER"
     INPUT_EMAIL = "INPUT_EMAIL"
+    INPUT_FIELD = "INPUT_FIELD"
     INPUT_LINK = "INPUT_LINK"
     INPUT_PHONE_NUMBER = "INPUT_PHONE_NUMBER"
     INPUT_DATE = "INPUT_DATE"
     INPUT_TIME = "INPUT_TIME"
     TEXTAREA = "TEXTAREA"
+    DROPDOWN = "DROPDOWN"
     FILE_UPLOAD = "FILE_UPLOAD"
     LINEAR_SCALE = "LINEAR_SCALE"
     RATING = "RATING"
+    HIDDEN_FIELD = "HIDDEN_FIELD"
     HIDDEN_FIELDS = "HIDDEN_FIELDS"
     MULTIPLE_CHOICE_OPTION = "MULTIPLE_CHOICE_OPTION"
     CHECKBOX = "CHECKBOX"
+    CHECKBOXES = "CHECKBOXES"
+    MULTIPLE_CHOICE = "MULTIPLE_CHOICE"
     DROPDOWN_OPTION = "DROPDOWN_OPTION"
     RANKING_OPTION = "RANKING_OPTION"
     MULTI_SELECT_OPTION = "MULTI_SELECT_OPTION"
@@ -66,10 +71,16 @@ class BlockType(str, Enum):
     MATRIX_ROW = "MATRIX_ROW"
     MATRIX_COLUMN = "MATRIX_COLUMN"
     WALLET_CONNECT = "WALLET_CONNECT"
+    CALCULATED_FIELD = "CALCULATED_FIELD"
     CONDITIONAL_LOGIC = "CONDITIONAL_LOGIC"
     CALCULATED_FIELDS = "CALCULATED_FIELDS"
     CAPTCHA = "CAPTCHA"
     RESPONDENT_COUNTRY = "RESPONDENT_COUNTRY"
+
+
+def _parse_block_type(value: str) -> BlockType | str:
+    """Return a known block type enum when the value exists in the current API."""
+    return BlockType(value) if value in BlockType._value2member_map_ else value
 
 
 @dataclass
@@ -119,13 +130,9 @@ class FormBlock:
 
         return cls(
             uuid=data["uuid"],
-            type=BlockType(block_type)
-            if block_type in BlockType.__members__.values()
-            else block_type,
+            type=_parse_block_type(block_type),
             group_uuid=data["groupUuid"],
-            group_type=BlockType(group_type)
-            if group_type in BlockType.__members__.values()
-            else group_type,
+            group_type=_parse_block_type(group_type),
             payload=data.get("payload"),
         )
 
@@ -322,6 +329,10 @@ class Form:
     is_closed: bool
     created_at: datetime
     updated_at: datetime
+    is_name_modified_by_user: bool | None = None
+    organization_id: str | None = None
+    has_draft_blocks: bool | None = None
+    index: int | None = None
     payments: list[FormPayment] | None = None
 
     @classmethod
@@ -330,10 +341,14 @@ class Form:
         return cls(
             id=data["id"],
             name=data["name"],
+            is_name_modified_by_user=data.get("isNameModifiedByUser"),
             workspace_id=data["workspaceId"],
+            organization_id=data.get("organizationId"),
             status=FormStatus(data["status"]),
+            has_draft_blocks=data.get("hasDraftBlocks"),
             number_of_submissions=data["numberOfSubmissions"],
             is_closed=data["isClosed"],
+            index=data.get("index"),
             created_at=datetime.fromisoformat(data["createdAt"].replace("Z", "+00:00")),
             updated_at=datetime.fromisoformat(data["updatedAt"].replace("Z", "+00:00")),
             payments=[FormPayment.from_dict(payment) for payment in data.get("payments", [])]
@@ -360,6 +375,10 @@ class FormDetails:
     updated_at: datetime
     settings: FormSettings
     blocks: list[FormBlock]
+    is_name_modified_by_user: bool | None = None
+    organization_id: str | None = None
+    has_draft_blocks: bool | None = None
+    index: int | None = None
     payments: list[FormPayment] | None = None
 
     @classmethod
@@ -368,10 +387,14 @@ class FormDetails:
         return cls(
             id=data["id"],
             name=data["name"],
+            is_name_modified_by_user=data.get("isNameModifiedByUser"),
             workspace_id=data["workspaceId"],
+            organization_id=data.get("organizationId"),
             status=FormStatus(data["status"]),
+            has_draft_blocks=data.get("hasDraftBlocks"),
             number_of_submissions=data["numberOfSubmissions"],
             is_closed=data["isClosed"],
+            index=data.get("index"),
             created_at=datetime.fromisoformat(data["createdAt"].replace("Z", "+00:00")),
             updated_at=datetime.fromisoformat(data["updatedAt"].replace("Z", "+00:00")),
             settings=FormSettings.from_dict(data["settings"]),
@@ -410,6 +433,7 @@ class QuestionField:
 
     uuid: str
     type: BlockType | str
+    question_type: BlockType | str | None
     block_group_uuid: str
     title: str
 
@@ -417,12 +441,12 @@ class QuestionField:
     def from_dict(cls, data: dict) -> "QuestionField":
         """Create a QuestionField instance from API response data."""
         field_type = data["type"]
+        question_type = data.get("questionType")
 
         return cls(
             uuid=data["uuid"],
-            type=BlockType(field_type)
-            if field_type in BlockType.__members__.values()
-            else field_type,
+            type=_parse_block_type(field_type),
+            question_type=_parse_block_type(question_type) if question_type is not None else None,
             block_group_uuid=data["blockGroupUuid"],
             title=data["title"],
         )
@@ -450,9 +474,7 @@ class Question:
 
         return cls(
             id=data["id"],
-            type=BlockType(question_type)
-            if question_type in BlockType.__members__.values()
-            else question_type,
+            type=_parse_block_type(question_type),
             title=data["title"],
             is_title_modified_by_user=data["isTitleModifiedByUser"],
             form_id=data["formId"],
@@ -465,18 +487,54 @@ class Question:
 
 
 @dataclass
+class QuestionsList:
+    """Represents the questions payload returned for a form."""
+
+    questions: list[Question]
+    has_responses: bool
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "QuestionsList":
+        """Create a QuestionsList instance from API response data."""
+        return cls(
+            questions=[Question.from_dict(question) for question in data.get("questions", [])],
+            has_responses=data.get("hasResponses", False),
+        )
+
+
+@dataclass
 class SubmissionResponse:
     """Represents a response to a question in a submission."""
 
+    id: str | None
+    form_id: str | None
     question_id: str
+    respondent_id: str | None
+    submission_id: str | None
+    session_uuid: str | None
     value: str | int | float | bool | list | dict | None
+    formatted_answer: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "SubmissionResponse":
         """Create a SubmissionResponse instance from API response data."""
         return cls(
+            id=data.get("id"),
+            form_id=data.get("formId"),
             question_id=data["questionId"],
-            value=data.get("value"),
+            respondent_id=data.get("respondentId"),
+            submission_id=data.get("submissionId"),
+            session_uuid=data.get("sessionUuid"),
+            value=data.get("answer"),
+            formatted_answer=data.get("formattedAnswer"),
+            created_at=datetime.fromisoformat(data["createdAt"].replace("Z", "+00:00"))
+            if data.get("createdAt")
+            else None,
+            updated_at=datetime.fromisoformat(data["updatedAt"].replace("Z", "+00:00"))
+            if data.get("updatedAt")
+            else None,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -493,9 +551,12 @@ class Submission:
 
     id: str
     form_id: str
+    respondent_id: str | None
     is_completed: bool
     submitted_at: datetime
     responses: list[SubmissionResponse]
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "Submission":
@@ -503,8 +564,15 @@ class Submission:
         return cls(
             id=data["id"],
             form_id=data["formId"],
+            respondent_id=data.get("respondentId"),
             is_completed=data["isCompleted"],
             submitted_at=datetime.fromisoformat(data["submittedAt"].replace("Z", "+00:00")),
+            created_at=datetime.fromisoformat(data["createdAt"].replace("Z", "+00:00"))
+            if data.get("createdAt")
+            else None,
+            updated_at=datetime.fromisoformat(data["updatedAt"].replace("Z", "+00:00"))
+            if data.get("updatedAt")
+            else None,
             responses=[
                 SubmissionResponse.from_dict(response) for response in data.get("responses", [])
             ],
@@ -562,6 +630,7 @@ class SubmissionDetails:
 
     id: str
     form_id: str
+    respondent_id: str | None
     is_completed: bool
     submitted_at: datetime
     created_at: datetime
@@ -574,6 +643,7 @@ class SubmissionDetails:
         return cls(
             id=data["id"],
             form_id=data["formId"],
+            respondent_id=data.get("respondentId"),
             is_completed=data["isCompleted"],
             submitted_at=datetime.fromisoformat(data["submittedAt"].replace("Z", "+00:00")),
             created_at=datetime.fromisoformat(data["createdAt"].replace("Z", "+00:00")),

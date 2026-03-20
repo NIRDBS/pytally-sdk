@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "id": "<string>",
+      "name": "<string>",
+      "workspaceId": "<string>",
+      "status": "BLANK",
+      "numberOfSubmissions": 123,
+      "isClosed": true,
+      "createdAt": "2023-11-07T05:31:56Z",
+      "updatedAt": "2023-11-07T05:31:56Z",
+      "payments": [
+        {
+          "amount": 123,
+          "currency": "<string>"
+        }
+      ]
+    }
+  ],
+  "page": 123,
+  "limit": 123,
+  "total": 123,
+  "hasMore": true
+}
