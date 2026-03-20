@@ -1,11 +1,11 @@
 site_name: PyTally SDK
-site_url: https://pytally-sdk.fa.dev.br
+site_url: https://nirdbs.github.io/pytally-sdk/
 site_description: Unofficial Python SDK for the Tally.so API
 site_author: Felipe Adeildo
 copyright: Copyright &copy; 2025 Felipe Adeildo
 
-repo_url: https://github.com/felipeadeildo/pytally-sdk
-repo_name: felipeadeildo/pytally-sdk
+repo_url: https://github.com/NIRDBS/pytally-sdk
+repo_name: NIRDBS/pytally-sdk
 edit_uri: blob/main/docs/
 
 theme:
@@ -92,6 +92,6 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/felipeadeildo/pytally-sdk
+      link: https://github.com/NIRDBS/pytally-sdk
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/pytally-sdk/

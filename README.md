@@ -5,7 +5,7 @@
 [![PyPI version](https://badge.fury.io/py/pytally-sdk.svg)](https://badge.fury.io/py/pytally-sdk)
 [![Python Versions](https://img.shields.io/pypi/pyversions/pytally-sdk.svg)](https://pypi.org/project/pytally-sdk/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docs](https://img.shields.io/badge/docs-online-brightgreen)](https://pytally-sdk.fa.dev.br)
+[![Docs](https://img.shields.io/badge/docs-online-brightgreen)](https://nirdbs.github.io/pytally-sdk/)
 
 ---
 
@@ -118,7 +118,7 @@ for submission in result.submissions:
     print(submission.id, submission.submitted_at)
 ```
 
-For complete API usage, visit the [📘 Forms Reference](https://pytally-sdk.fa.dev.br/api-reference/forms/).
+For complete API usage, visit the [📘 Forms Reference](https://nirdbs.github.io/pytally-sdk/api-reference/forms/).
 
 ---
 
@@ -137,14 +137,14 @@ except NotFoundError:
     print("Resource not found.")
 ```
 
-See [Error Handling → docs](https://pytally-sdk.fa.dev.br/error-handling/).
+See [Error Handling → docs](https://nirdbs.github.io/pytally-sdk/error-handling/).
 
 ---
 
 ## Documentation
 
 👉 Full documentation and API reference available at:
-**[https://pytally-sdk.fa.dev.br](https://pytally-sdk.fa.dev.br)**
+**[https://nirdbs.github.io/pytally-sdk/](https://nirdbs.github.io/pytally-sdk/)**
 
 ---
 
@@ -182,10 +182,10 @@ PYTHONPATH=src python -m pytest -m live_api tests/integration/test_forms_live.py
 ## 🔗 Links
 
 * 📦 [PyPI Package](https://pypi.org/project/pytally-sdk/)
-* 💻 [GitHub Repository](https://github.com/felipeadeildo/pytally-sdk)
+* 💻 [GitHub Repository](https://github.com/NIRDBS/pytally-sdk)
 * 🧾 [Tally API Reference](https://developers.tally.so/api-reference/introduction)
-* 🪲 [Issue Tracker](https://github.com/felipeadeildo/pytally-sdk/issues)
-* 📘 [Documentation](https://pytally-sdk.fa.dev.br)
+* 🪲 [Issue Tracker](https://github.com/NIRDBS/pytally-sdk/issues)
+* 📘 [Documentation](https://nirdbs.github.io/pytally-sdk/)
 
 ---
 

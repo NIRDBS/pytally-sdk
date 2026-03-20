@@ -26,10 +26,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/felipeadeildo/pytally-sdk"
-Repository = "https://github.com/felipeadeildo/pytally-sdk"
-Issues = "https://github.com/felipeadeildo/pytally-sdk/issues"
-Documentation = "https://pytally-sdk.fa.dev.br/"
+Homepage = "https://github.com/NIRDBS/pytally-sdk"
+Repository = "https://github.com/NIRDBS/pytally-sdk"
+Issues = "https://github.com/NIRDBS/pytally-sdk/issues"
+Documentation = "https://nirdbs.github.io/pytally-sdk/"
 
 
 [tool.uv.build-backend]
