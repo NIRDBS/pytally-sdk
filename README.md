@@ -68,36 +68,43 @@ with Tally(api_key="tly_your_api_key_here") as client:
 
 ---
 
-## Webhooks — Example Usage
+## Forms — Example Usage
 
-### List Webhooks
+### List Forms
 
 ```python
 from tally import Tally
 
 client = Tally(api_key="tly_your_api_key_here")
 
-# Get all webhooks
-for webhook in client.webhooks:
-    print(f"{webhook.url} → enabled={webhook.is_enabled}")
+# Get first page of forms
+forms = client.forms.all(page=1, limit=10)
+print(f"Page {forms.page}, total={forms.total}")
+
+for form in forms.items:
+    print(f"{form.name} ({form.id}) → {form.status.value}")
 ```
 
-### Create a Webhook
+### List Form Submissions
 
 ```python
 from tally import Tally
+from tally.models import SubmissionFilter
 
 client = Tally(api_key="tly_your_api_key_here")
 
-webhook = client.webhooks.create(
-    url="https://your-app.com/webhooks/tally",
-    event_types=["FORM_RESPONSE"],
+result = client.forms.list_submissions(
+    "your_form_id",
+    page=1,
+    filter=SubmissionFilter.ALL,
 )
 
-print(f"Webhook created: {webhook.id}")
+print(result.total_number_of_submissions_per_filter.all)
+for submission in result.submissions:
+    print(submission.id, submission.submitted_at)
 ```
 
-For complete API usage, visit the [📘 Webhooks Reference](https://pytally-sdk.fa.dev.br/api-reference/webhooks/).
+For complete API usage, visit the [📘 Forms Reference](https://pytally-sdk.fa.dev.br/api-reference/forms/).
 
 ---
 
@@ -132,11 +139,27 @@ See [Error Handling → docs](https://pytally-sdk.fa.dev.br/error-handling/).
 Wanna help improve the SDK?
 
 ```bash
-git clone https://github.com/felipeadeildo/pytally.git
-cd pytally
-uv sync
+git clone https://github.com/felipeadeildo/pytally-sdk.git
+cd pytally-sdk
+uv sync --dev
 uv run mkdocs serve  # preview docs locally
 pre-commit install   # install pre-commit hooks
+```
+
+### Tests
+
+Unit tests:
+
+```bash
+PYTHONPATH=src python -m pytest tests/test_client.py tests/resources/test_forms.py
+```
+
+Live read-only tests:
+
+```bash
+export TALLY_API_KEY="tly_your_api_key_here"
+export TALLY_FORM_ID="your_form_id"
+PYTHONPATH=src python -m pytest -m live_api tests/integration/test_forms_live.py
 ```
 
 ---
@@ -144,16 +167,16 @@ pre-commit install   # install pre-commit hooks
 ## 🔗 Links
 
 * 📦 [PyPI Package](https://pypi.org/project/pytally-sdk/)
-* 💻 [GitHub Repository](https://github.com/felipeadeildo/pytally)
+* 💻 [GitHub Repository](https://github.com/felipeadeildo/pytally-sdk)
 * 🧾 [Tally API Reference](https://developers.tally.so/api-reference/introduction)
-* 🪲 [Issue Tracker](https://github.com/felipeadeildo/pytally/issues)
+* 🪲 [Issue Tracker](https://github.com/felipeadeildo/pytally-sdk/issues)
 * 📘 [Documentation](https://pytally-sdk.fa.dev.br)
 
 ---
 
 ## ⚖️ License
 
-Licensed under the [Apache License 2.0](https://github.com/felipeadeildo/pytally/blob/main/LICENSE).
+Licensed under the [Apache License 2.0](https://github.com/felipeadeildo/pytally-sdk/blob/main/LICENSE).
 
 > **Disclaimer**
 > This is an unofficial SDK and is not affiliated with or endorsed by Tally.

@@ -50,7 +50,11 @@ from tally import Tally, TallyAPIError
 client = Tally(api_key="tly_your_api_key_here")
 
 try:
-    form = client.forms.create(name="", workspace_id="invalid")
+    form = client.forms.create(
+        status="DRAFT",
+        workspace_id="invalid",
+        blocks=[],
+    )
 except TallyAPIError as e:
     print(f"Error: {e.message}")
     print(f"Status: {e.status_code}")
@@ -79,8 +83,12 @@ from tally import Tally, BadRequestError
 client = Tally(api_key="tly_your_api_key_here")
 
 try:
-    # Missing required 'name' parameter
-    form = client.forms.create(workspace_id="wXYz123")
+    # Invalid create payload
+    form = client.forms.create(
+        status="DRAFT",
+        workspace_id="wXYz123",
+        blocks=[],
+    )
 except BadRequestError as e:
     print(f"Bad request: {e.message}")
     # Handle validation errors
@@ -337,7 +345,11 @@ from tally import Tally, TallyAPIError
 client = Tally(api_key="tly_your_api_key_here")
 
 try:
-    form = client.forms.create(name="Test")
+    form = client.forms.create(
+        status="DRAFT",
+        workspace_id="invalid",
+        blocks=[],
+    )
 except TallyAPIError as e:
     print("=== Error Details ===")
     print(f"Message: {e.message}")

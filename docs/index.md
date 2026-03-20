@@ -19,7 +19,7 @@ Currently, the SDK covers the following Tally API resources:
 - ✅ **Forms** - Create, update, and manage forms and submissions
 - ✅ **Workspaces** - List and manage workspaces
 - ✅ **Webhooks** - Configure and monitor webhook integrations
-- 🚧 **MCP** - I'm thinking the best way to do that. Comming soon.
+- 🚧 **MCP** - Not implemented yet
 
 !!! info "Official API Documentation"
     For complete API details and specifications, refer to the [Official Tally API Documentation](https://developers.tally.so/api-reference/introduction).
@@ -61,7 +61,8 @@ client = Tally(api_key="tly_your_api_key_here")
 user = client.users.me()
 print(f"Hello, {user.full_name}!")
 print(f"Email: {user.email}")
-print(f"Plan: {user.subscription_plan.value}")
+if user.subscription_plan:
+    print(f"Plan: {user.subscription_plan.value}")
 ```
 
 ### Using Context Manager
@@ -90,25 +91,24 @@ client = Tally(api_key="tly_your_api_key_here")
 
 # List forms with pagination
 forms = client.forms.all(page=1, limit=10)
-print(f"Found {len(forms.data)} forms")
+print(f"Found {len(forms.items)} forms")
 
 # Get a specific form
 form = client.forms.get(form_id="wXYz123")
 print(f"Form: {form.name}")
-print(f"Status: {form.status}")
-print(f"Submissions: {form.submission_count}")
+print(f"Status: {form.status.value}")
+print(f"Submissions: {form.number_of_submissions}")
 
 # List form submissions
 submissions = client.forms.list_submissions(
     form_id="wXYz123",
     filter="all",
     page=1,
-    limit=25
 )
 
-for submission in submissions.data:
-    print(f"Submission ID: {submission.submission_id}")
-    print(f"Created: {submission.created_at}")
+for submission in submissions.submissions:
+    print(f"Submission ID: {submission.id}")
+    print(f"Submitted: {submission.submitted_at}")
 ```
 
 ### Setting up Webhooks
@@ -120,19 +120,17 @@ client = Tally(api_key="tly_your_api_key_here")
 
 # Create a webhook
 webhook = client.webhooks.create(
+    form_id="wXYz123",
     url="https://your-app.com/webhooks/tally",
-    event_types=["form.submitted"],
-    form_ids=["wXYz123"],
-    name="My Webhook"
+    event_types=["FORM_RESPONSE"],
 )
 
 print(f"Webhook created: {webhook.id}")
-print(f"Secret: {webhook.secret}")
 
 # List webhook events
 events = client.webhooks.get_events(webhook_id=webhook.id)
-for event in events.data:
-    print(f"Event: {event.event_type} - {event.status}")
+for event in events.events:
+    print(f"Event: {event.event_type.value} - {event.delivery_status.value}")
 ```
 
 ## API Versioning
@@ -144,7 +142,7 @@ from tally import Tally
 
 client = Tally(
     api_key="tly_your_api_key_here",
-    api_version="2025-02-01"  # Optional: specify API version
+    api_version="2026-02-05"  # Optional: specify API version
 )
 ```
 
@@ -181,10 +179,27 @@ from tally import Tally
 
 client = Tally(
     api_key="tly_your_api_key_here",       # Required: Your Tally API key
-    api_version="2025-02-01",              # Optional: API version (default: key version)
+    api_version="2026-02-05",              # Optional: API version (default: key version)
     timeout=30.0,                          # Optional: Request timeout in seconds (default: 30.0)
-    base_url="https://api.tally.so"       # Optional: Custom base URL (default: https://api.tally.so)
+    base_url="https://api.tally.so",       # Optional: Custom base URL (default: https://api.tally.so)
 )
+```
+
+## Testing
+
+The project includes two test layers:
+
+- Unit tests for `TallyClient` and forms serialization/parsing
+- Live read-only API tests for listing forms and form submissions
+
+```bash
+PYTHONPATH=src python -m pytest tests/test_client.py tests/resources/test_forms.py
+```
+
+```bash
+export TALLY_API_KEY="tly_your_api_key_here"
+export TALLY_FORM_ID="your_form_id"
+PYTHONPATH=src python -m pytest -m live_api tests/integration/test_forms_live.py
 ```
 
 ## Next Steps
