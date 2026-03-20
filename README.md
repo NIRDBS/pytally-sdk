@@ -1,6 +1,8 @@
 # PyTally SDK
 
 > Unofficial Python SDK for the [Tally.so](https://tally.so) API.
+>
+> Fork note: this repository is based on the original [`felipeadeildo/pytally-sdk`](https://github.com/felipeadeildo/pytally-sdk). It exists to fix and implement behavior needed for internal use cases. Ongoing maintenance is not guaranteed.
 
 [![PyPI version](https://badge.fury.io/py/pytally-sdk.svg)](https://badge.fury.io/py/pytally-sdk)
 [![Python Versions](https://img.shields.io/pypi/pyversions/pytally-sdk.svg)](https://pypi.org/project/pytally-sdk/)
